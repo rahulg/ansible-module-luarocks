@@ -34,6 +34,11 @@ short_description: Manage lua rocks with luarocks
 description:
   - Manage lua rocks with luarocks
 options:
+  deps_mode:
+    description:
+      - How to handle dependencies (corresponds to the --deps-mode flag of luarocks)
+    required: false
+    choices: [ "all", "one", "order", "none" ]
   executable:
     description:
       - The name of the luarocks executable to use
@@ -117,6 +122,7 @@ class Luarocks(object):
         self.local = kwargs['local']
         self.keep_other_versions = kwargs['keep_other_versions']
         self.version = kwargs['version']
+        self.deps_mode = kwargs['deps_mode']
 
     def _exec(self, args, run_in_check_mode=False, check_rc=True):
         if not self.module.check_mode or (self.module.check_mode and run_in_check_mode):
@@ -164,10 +170,17 @@ class Luarocks(object):
         if self.keep_other_versions:
             cmd.append('--keep')
 
+        if self.deps_mode:
+            cmd.append('--deps-mode={}'.format(self.deps_mode))
+
         return self._exec(cmd)
 
     def remove(self):
         cmd = ['remove']
+
+        if self.deps_mode:
+            cmd.append('--deps-mode={}'.format(self.deps_mode))
+
         return self._exec(cmd)
 
 
@@ -182,6 +195,7 @@ def main():
         tree=dict(default=None, required=False, type='path'),
         server=dict(default=None, required=False),
         override_servers=dict(default=False, required=False, type='bool'),
+        deps_mode=dict(default=None, choices=['all', 'one', 'order', 'none', ]),
     )
     module = AnsibleModule(
         argument_spec=arg_spec,
@@ -197,6 +211,7 @@ def main():
     tree = module.params['tree']
     server = module.params['server']
     override_servers = module.params['override_servers']
+    deps_mode = module.params['deps_mode']
 
     luarocks = Luarocks(
         module,
@@ -208,6 +223,7 @@ def main():
         tree=tree,
         server=server,
         override_servers=override_servers,
+        deps_mode=deps_mode,
     )
 
     changed = False
