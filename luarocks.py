@@ -54,6 +54,11 @@ options:
     description:
       - The name of a luarocks package to install
     required: true
+  override_servers:
+    description:
+      - Whether to override the servers specified in the luarocks config
+    required: false
+    default: no
   state:
     description:
       - The state of the lua rocks
@@ -107,6 +112,7 @@ class Luarocks(object):
         self.executable = kwargs['executable']
         self.name = kwargs['name']
         self.server = kwargs['server']
+        self.override_servers = kwargs['override_servers']
         self.tree = kwargs['tree']
         self.local = kwargs['local']
         self.keep_other_versions = kwargs['keep_other_versions']
@@ -126,7 +132,11 @@ class Luarocks(object):
                 cmd.append('--tree={}'.format(self.tree))
 
             if self.server:
-                cmd.append('--server={}'.format(self.server))
+                if self.override_servers:
+                    cmd.append('--only-')
+                else:
+                    cmd.append('--')
+                cmd.append('server={}'.format(self.server))
 
             cmd.extend(args)
 
@@ -171,6 +181,7 @@ def main():
         local=dict(default=False, required=False, type='bool'),
         tree=dict(default=None, required=False, type='path'),
         server=dict(default=None, required=False),
+        override_servers=dict(default=False, required=False, type='bool'),
     )
     module = AnsibleModule(
         argument_spec=arg_spec,
@@ -185,6 +196,7 @@ def main():
     local = module.params['local']
     tree = module.params['tree']
     server = module.params['server']
+    override_servers = module.params['override_servers']
 
     luarocks = Luarocks(
         module,
@@ -195,6 +207,7 @@ def main():
         local=local,
         tree=tree,
         server=server,
+        override_servers=override_servers,
     )
 
     changed = False
