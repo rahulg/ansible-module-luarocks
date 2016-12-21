@@ -24,7 +24,7 @@ from ansible.module_utils.basic import AnsibleModule
 ANSIBLE_METADATA = {
     'status': ['preview'],
     'supported_by': 'community',
-    'version': '1.0',
+    'version': '1.0.1',
 }
 
 DOCUMENTATION = '''
@@ -139,10 +139,10 @@ class Luarocks(object):
 
             if self.server:
                 if self.override_servers:
-                    cmd.append('--only-')
+                    s = '--only-'
                 else:
-                    cmd.append('--')
-                cmd.append('server={}'.format(self.server))
+                    s = '--'
+                cmd.append('{}server={}'.format(s, self.server))
 
             cmd.extend(args)
 
