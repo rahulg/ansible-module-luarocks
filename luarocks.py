@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # (c) 2016, Rahul AG <r@hul.ag>
+# (c) 2018, Ahmad Amireh <ahmad@instructure.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +25,7 @@ from ansible.module_utils.basic import AnsibleModule
 ANSIBLE_METADATA = {
     'status': ['preview'],
     'supported_by': 'community',
-    'version': '1.0.1',
+    'version': '1.0.2',
 }
 
 DOCUMENTATION = '''
@@ -69,7 +70,7 @@ options:
       - The state of the lua rocks
     required: false
     default: present
-    choices: [ "present", "absent" ]
+    choices: [ "present", "absent", "only_deps" ]
   server:
     description:
       - A server URI to fetch rocks and rockspecs from
@@ -117,6 +118,7 @@ class Luarocks(object):
         self.executable = kwargs['executable']
         self.name = kwargs['name']
         self.server = kwargs['server']
+        self.state = kwargs['state']
         self.override_servers = kwargs['override_servers']
         self.tree = kwargs['tree']
         self.local = kwargs['local']
@@ -169,9 +171,10 @@ class Luarocks(object):
 
         if self.keep_other_versions:
             cmd.append('--keep')
-
         if self.deps_mode:
             cmd.append('--deps-mode={}'.format(self.deps_mode))
+        if self.state == 'only_deps':
+            cmd.append('--only-deps')
 
         return self._exec(cmd)
 
@@ -188,7 +191,7 @@ def main():
     arg_spec = dict(
         executable=dict(default='luarocks', required=False),
         name=dict(default=None),
-        state=dict(default='present', choices=['present', 'absent', ]),
+        state=dict(default='present', choices=['present', 'absent', 'only_deps', ]),
         version=dict(default=None, required=False),
         keep_other_versions=dict(default=False, required=False, type='bool'),
         local=dict(default=False, required=False, type='bool'),
@@ -222,12 +225,18 @@ def main():
         local=local,
         tree=tree,
         server=server,
+        state=state,
         override_servers=override_servers,
         deps_mode=deps_mode,
     )
 
     changed = False
-    if state == 'present':
+
+    if state == 'only_deps':
+        out = luarocks.install()
+        missing_deps = re.search(r'^Missing dependencies for .+:\n', out)
+        changed = missing_deps != None
+    elif state == 'present':
         installed = luarocks.list()
         if name not in installed:
             changed = True
