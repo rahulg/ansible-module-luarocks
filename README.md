@@ -17,7 +17,7 @@ to a playbook-specific library (`./library` relative to your YAML file).
 - name: Install the "luasocket" rock in a more explicit way.
   luarocks:
     name: luasocket
-	state: present
+    state: present
 
 - name: Install the "luasocket" rock from a specific server.
   luarocks:
@@ -32,7 +32,7 @@ to a playbook-specific library (`./library` relative to your YAML file).
 - name: Install the "luasocket" rock into a specific tree.
   luarocks:
     name: luasocket
-	tree: /srv/foo/rocks
+    tree: /srv/foo/rocks
 
 - name: Install version 2.0.2 of the "luasocket" rock.
  luarocks:
